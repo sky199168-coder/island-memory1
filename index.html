@@ -48,7 +48,7 @@ h1{margin:4px 0 0;font-size:26px}
   <h1 id="title">島嶼記憶史──台灣藝術家@</h1>
   <div class="nick">
     <label for="who">我的座號姓名：</label>
-    <input id="who" placeholder="例：400-01陳阿滴" maxlength="30">
+    <input id="who" placeholder="例：395-39郭妍郁" maxlength="30">
     <span id="status"></span>
   </div>
 </header>
@@ -72,7 +72,7 @@ const db = getFirestore(initializeApp(firebaseConfig));
 const CLASSES = ["401","402","403","404","405","406"];
 const INFO = [
   {t:"撰寫規則", pin:true, rules:["至網站選擇一位藝術家","閱讀課本與瀏覽相關影片，整理貼文內容","自介位置，請發揮創意整理其代表名稱或與之相關的敘述","總共要有四則貼文","前三則，請選出三件藝術家生平最重要的事情，以他的視角發表三則貼文","第四則貼文，需要提到他的作品，並且利用色鉛筆畫出來！","版面的規劃，自行發揮創意！","每個藝術家最多認領兩個人，新增評論留言，先留言先得"]},
-  {t:"撰寫方式", text:"請點開圖片，依據規定填寫，才能拿到基本分。<br><br>寫完利用掃描 App <b>拍下學習單正面</b>，至 <b>Classroom</b> 上傳。"}
+  {t:"撰寫方式", text:"寫完利用掃描 App <b>拍下學習單正面</b>，至 <b>Classroom</b> 上傳。<br><br><a href=\"guide.jpg\" target=\"_blank\" rel=\"noopener\"><img src=\"guide.jpg\" alt=\"@藝術家碎碎念學習單製作指南\" style=\"width:100%;border-radius:8px;display:block\"></a>"}
 ];
 const GROUPS = [
   ["台灣美術啟蒙導師",["石川欽一郎","木下靜涯","鄉原古統","鹽月桃甫"]],

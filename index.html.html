@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>島嶼記憶史｜台灣藝術家@</title>
+<style>
+:root{--paper:#fbf8ec;--rule:#c8dcec;--mar:#e8908c;--card:#fff;--ink:#222;--sub:#6b6b6b;--line:#e4e0d6;--head:rgba(255,255,255,.7);--acc:#2f7d5b;--chip:#f3efe4}
+@media (prefers-color-scheme:dark){:root{--paper:#2b2a26;--rule:#3a4854;--mar:#8a4a48;--card:#2a2a28;--ink:#f0ede4;--sub:#a9a699;--line:#403e38;--head:rgba(30,30,28,.6);--acc:#6fcf9f;--chip:#383630;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;color:var(--ink);background:var(--paper) repeating-linear-gradient(to bottom,transparent 0,transparent 31px,var(--rule) 31px,var(--rule) 32px) fixed;min-height:100vh}
+body::before{content:"";position:fixed;top:0;bottom:0;left:60px;width:2px;background:var(--mar);opacity:.75;pointer-events:none}
+body::after{content:"";position:fixed;top:0;bottom:0;left:14px;width:22px;background:radial-gradient(circle at center,rgba(0,0,0,.28) 0 6px,transparent 7px) 0 0/22px 56px repeat-y;pointer-events:none}
+header,main{position:relative;z-index:1}
+header{padding:20px 24px 4px 84px}
+header small{color:var(--sub);font-size:13px}
+h1{margin:4px 0 0;font-size:26px}
+.nick{display:flex;gap:8px;align-items:center;margin-top:10px;font-size:13px;flex-wrap:wrap}
+.nick input{padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);width:220px;max-width:100%}
+#status{color:var(--sub)}
+.board{display:flex;gap:18px;padding:16px 24px 40px 84px;overflow-x:auto;align-items:flex-start}
+.col{flex:0 0 300px;width:300px}
+.col>h2{margin:0 0 12px;padding:11px 14px;border-radius:12px;background:var(--head);backdrop-filter:blur(4px);font-size:17px}
+.card{background:var(--card);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.card h3{margin:0;font-size:17px}
+.card ol,.card p{margin:8px 0 0;padding-left:20px;font-size:14px;line-height:1.7}
+.card p{padding-left:0}
+.pin{font-size:12px;color:var(--sub);margin-bottom:6px}
+.meta{margin-top:6px;font-size:12px}
+.chip{background:var(--chip);border-radius:20px;padding:2px 9px;color:var(--sub)}
+.chip.full{color:#b3402f;font-weight:600}
+.cm{border-top:1px solid var(--line);margin-top:10px;padding-top:8px;font-size:13px}
+.cm b{display:block}
+.cm time{color:var(--sub);font-size:11px}
+.add{margin-top:10px;display:flex;gap:6px}
+.add input{flex:1;min-width:0;padding:7px 9px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:13px}
+.add button{border:0;border-radius:8px;background:var(--acc);color:#fff;padding:0 12px;cursor:pointer;font-size:13px}
+.add button:disabled,.add input:disabled{opacity:.45;cursor:not-allowed}
+.pick{padding:30px 24px 30px 84px;position:relative;z-index:1}
+.pick a{display:inline-block;margin:6px 8px 6px 0;padding:10px 18px;border-radius:12px;background:var(--card);color:var(--ink);text-decoration:none;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+@media (max-width:560px){.col{flex-basis:78vw;width:78vw}.board{padding:12px 12px 40px 52px}header,.pick{padding-left:52px}body::before{left:40px}body::after{left:6px;width:18px;background-size:18px 56px}}
+</style>
+</head>
+<body>
+<header>
+  <small>陳香全／老師</small>
+  <h1 id="title">島嶼記憶史──台灣藝術家@</h1>
+  <div class="nick">
+    <label for="who">我的座號姓名：</label>
+    <input id="who" placeholder="例：395-39郭妍郁" maxlength="30">
+    <span id="status"></span>
+  </div>
+</header>
+<div id="pick" class="pick" hidden></div>
+<main class="board" id="board"></main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, query, where, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD4vyYtsLXhBZjUR0zpyBRttjpkNmmj5Mw",
+  authDomain: "island-memory.firebaseapp.com",
+  projectId: "island-memory",
+  storageBucket: "island-memory.firebasestorage.app",
+  messagingSenderId: "1070944643144",
+  appId: "1:1070944643144:web:6d30b12236d9171ef7507d"
+};
+const db = getFirestore(initializeApp(firebaseConfig));
+
+const CLASSES = ["401","402","403","404","405","406"];
+const INFO = [
+  {t:"撰寫規則", pin:true, rules:["至網站選擇一位藝術家","閱讀課本與瀏覽相關影片，整理貼文內容","自介位置，請發揮創意整理其代表名稱或與之相關的敘述","總共要有四則貼文","前三則，請選出三件藝術家生平最重要的事情，以他的視角發表三則貼文","第四則貼文，需要提到他的作品，並且利用色鉛筆畫出來！","版面的規劃，自行發揮創意！","每個藝術家最多認領兩個人，新增評論留言，先留言先得"]},
+  {t:"撰寫方式", text:"請點開圖片，依據規定填寫，才能拿到基本分。<br><br>寫完利用掃描 App <b>拍下學習單正面</b>，至 <b>Classroom</b> 上傳。"}
+];
+const GROUPS = [
+  ["台灣美術啟蒙導師",["石川欽一郎","木下靜涯","鄉原古統","鹽月桃甫"]],
+  ["台展三少年",["林玉山","陳進","郭雪湖"]],
+  ["日治時期",["倪蔣懷","廖繼春","洪瑞麟","林之助","陳澄波","顏水龍"]],
+  ["政治動盪",["黃榮燦","溥心畬","黃君璧","張大千"]],
+  ["抽象繪畫的開始",["劉國松","莊喆","夏陽","蕭勤"]],
+  ["鄉土意識與素人藝術家",["吳李玉哥","洪通","林淵"]]
+];
+const MAX = 2;
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let cls = "", comments = [], unsub = null;
+
+try { $("#who").value = localStorage.getItem("who") || ""; } catch(e){}
+$("#who").addEventListener("input", e => { try { localStorage.setItem("who", e.target.value); } catch(_){} });
+
+function render(){
+  const focus = document.activeElement?.dataset?.a;
+  const keep = {}; document.querySelectorAll(".add input").forEach(i => keep[i.dataset.a] = i.value);
+  let h = "";
+  INFO.forEach(c => {
+    h += `<section class="col"><h2>${esc(c.t)}</h2><div class="card">${c.pin?'<div class="pin">📌 已釘選</div>':''}`;
+    h += c.rules ? `<ol>${c.rules.map(r=>`<li>${esc(r)}</li>`).join("")}</ol>` : `<p>${c.text}</p>`;
+    h += `</div></section>`;
+  });
+  GROUPS.forEach(([g, artists]) => {
+    h += `<section class="col"><h2>${esc(g)}</h2>`;
+    artists.forEach(a => {
+      const list = comments.filter(c => c.artist === a);
+      const full = list.length >= MAX;
+      h += `<div class="card"><h3>${esc(a)}</h3><div class="meta"><span class="chip ${full?'full':''}">${full?'已額滿':'已認領'} ${list.length}/${MAX}</span></div>`;
+      list.forEach(c => {
+        h += `<div class="cm"><b>${esc(c.name)}</b><time>${new Date(c.ts).toLocaleString("zh-TW",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})}</time><div>${esc(c.text)}</div></div>`;
+      });
+      h += `<div class="add"><input data-a="${esc(a)}" placeholder="${full?'此藝術家已被認領滿':'+1 新增留言'}" ${full?'disabled':''} maxlength="80"><button data-a="${esc(a)}" ${full?'disabled':''}>認領</button></div></div>`;
+    });
+    h += `</section>`;
+  });
+  const board = $("#board"), sx = board.scrollLeft;
+  board.innerHTML = h; board.scrollLeft = sx;
+  document.querySelectorAll(".add input").forEach(i => { if (keep[i.dataset.a]) i.value = keep[i.dataset.a]; if (i.dataset.a === focus) i.focus(); });
+}
+
+async function post(artist, text){
+  const name = $("#who").value.trim();
+  if (!name) { alert("請先在上方輸入座號姓名"); $("#who").focus(); return; }
+  if (comments.filter(c => c.artist === artist).length >= MAX) return;
+  try { await addDoc(collection(db, "comments"), {cls, artist, name, text: (text||"+1").trim().slice(0,80), ts: Date.now()}); }
+  catch(e){ alert("留言失敗，請稍後再試"); }
+}
+$("#board").addEventListener("click", async e => {
+  const b = e.target.closest("button"); if (!b) return;
+  const i = b.parentElement.querySelector("input"); await post(b.dataset.a, i.value); i.value = "";
+});
+$("#board").addEventListener("keydown", async e => {
+  if (e.key === "Enter" && e.target.matches(".add input")) { await post(e.target.dataset.a, e.target.value); e.target.value = ""; }
+});
+
+function route(){
+  cls = location.hash.replace("#","");
+  if (unsub) { unsub(); unsub = null; }
+  comments = [];
+  if (!CLASSES.includes(cls)) {
+    $("#board").hidden = true; $(".nick").hidden = true;
+    $("#pick").hidden = false;
+    $("#pick").innerHTML = "<p>請選擇你的班級：</p>" + CLASSES.map(c => `<a href="#${c}">${c} 班</a>`).join("");
+    return;
+  }
+  $("#pick").hidden = true; $("#board").hidden = false; $(".nick").hidden = false;
+  $("#title").textContent = `島嶼記憶史──台灣藝術家@（${cls}班）`;
+  document.title = `島嶼記憶史｜${cls}班`;
+  $("#status").textContent = "連線中…";
+  render();
+  unsub = onSnapshot(query(collection(db, "comments"), where("cls", "==", cls)), snap => {
+    comments = snap.docs.map(d => d.data()).sort((a,b) => a.ts - b.ts);
+    $("#status").textContent = "留言即時同步";
+    render();
+  }, () => { $("#status").textContent = "讀取失敗，請重新整理"; });
+}
+window.addEventListener("hashchange", route);
+route();
+</script>
+</body>
+</html>

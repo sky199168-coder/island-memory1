@@ -48,7 +48,7 @@ h1{margin:4px 0 0;font-size:26px}
   <h1 id="title">島嶼記憶史──台灣藝術家@</h1>
   <div class="nick">
     <label for="who">我的座號姓名：</label>
-    <input id="who" placeholder="例：401-01都阿滴" maxlength="30">
+    <input id="who" placeholder="例：395-39郭妍郁" maxlength="30">
     <span id="status"></span>
   </div>
 </header>
@@ -57,7 +57,7 @@ h1{margin:4px 0 0;font-size:26px}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, query, where, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, query, where, onSnapshot, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD4vyYtsLXhBZjUR0zpyBRttjpkNmmj5Mw",
@@ -121,8 +121,12 @@ async function post(artist, text){
   const name = $("#who").value.trim();
   if (!name) { alert("請先在上方輸入座號姓名"); $("#who").focus(); return; }
   if (comments.filter(c => c.artist === artist).length >= MAX) return;
-  try { await addDoc(collection(db, "comments"), {cls, artist, name, text: (text||"+1").trim().slice(0,80), ts: Date.now()}); }
-  catch(e){ alert("留言失敗，請稍後再試"); }
+  const data = {cls, artist, name, text: (text||"+1").trim().slice(0,80), ts: Date.now()};
+  for (const n of [1,2]) {
+    try { await setDoc(doc(db, "comments", `${cls}_${artist}_${n}`), data); return; }
+    catch(e){ if (e.code !== "permission-denied") break; }
+  }
+  alert("這位藝術家的名額已被認領滿，或留言失敗，請改選其他藝術家。");
 }
 $("#board").addEventListener("click", async e => {
   const b = e.target.closest("button"); if (!b) return;
